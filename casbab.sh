@@ -28,17 +28,17 @@ expr "$*" : ".*--help" > /dev/null && usage
 
 detect() {
   # Return normalized string, all lower and with spaces as separators
-  arg=${@:-}
+  arg=( "${@:-}" )
   helper=""
   for i in '_' '-' ' '; do
-    if [[ ${arg} == *$i* ]]; then
+    if [[ ${arg[*]} == *$i* ]]; then
       helper="yes"
-      echo ${arg} | tr '[:upper:]' '[:lower:]' | tr -s ${i} ' '
+      echo "${arg[*]}" | tr '[:upper:]' '[:lower:]' | tr -s "${i}" ' '
     fi
   done
   # If '_','-' and ' ' are not used as a separator try by case
-  if [[ -z $helper ]]; then
-    dif_case ${@:-} | tr '[:upper:]' '[:lower:]'
+  if [[ -z $helper ]] && [[ ${arg[0]} != '' ]]; then
+    dif_case "${@:-}" | tr '[:upper:]' '[:lower:]'
   fi
 }
 
@@ -53,130 +53,130 @@ check_case() {
 
 dif_case() {
   # Parse string char by char
-  arg=${@:-}
+  arg=( "${@:-}" )
   helper=""
   for (( i=0; i<${#arg}; i++ )); do
     if [[ $i == 0 ]]; then
       helper="${arg:$i:1}"
-    elif ([[ $(check_case ${arg:$i:1}) == 0 ]] && [[ $(check_case ${arg:((i+1)):1}) == 1 ]]) || ([[ $(check_case ${arg:$i:1}) == 0 ]] && [[ $(check_case ${arg:((i-1)):1}) == 1 ]]); then
+    elif ([[ $(check_case "${arg:$i:1}") == 0 ]] && [[ $(check_case "${arg:((i+1)):1}") == 1 ]]) || ([[ $(check_case "${arg:$i:1}") == 0 ]] && [[ $(check_case "${arg:((i-1)):1}") == 1 ]]); then
       helper="${helper} ${arg:$i:1}"
-    elif [[ $(check_case ${arg:$i:1}) == $(check_case ${arg:((i-1)):1}) ]] || ([[ $(check_case ${arg:$i:1}) == 1 ]] && [[ $(check_case ${arg:((i-1)):1}) == 0 ]]);then
+    elif [[ $(check_case "${arg:$i:1}") == $(check_case "${arg:((i-1)):1}") ]] || ([[ $(check_case "${arg:$i:1}") == 1 ]] && [[ $(check_case "${arg:((i-1)):1}") == 0 ]]);then
       helper="${helper}${arg:$i:1}"
     else
       echo "Unknown character: ${arg:$i:1}"
       exit 1
     fi
   done
-  echo ${helper}
+  echo "${helper}"
 }
 
 first_up() {
   # Set first letter upper in a single word
   helper=${1}
-  echo "$(tr '[:lower:]' '[:upper:]' <<< ${helper:0:1})${helper:1}"
+  echo "$(tr '[:lower:]' '[:upper:]' <<< "${helper:0:1}")${helper:1}"
 }
 
 camelcase() {
   # Set camel case with space separator
-  arg=$(detect ${@:-})
+  arg=( $(detect "${@:-}") )
   helper=""
   COUNTER=0
-  for i in ${arg[@]}; do
+  for i in "${arg[@]}"; do
     if [[ $COUNTER == 0 ]]; then
       helper="$i"
     else
-      helper="${helper} $(first_up $i)"
+      helper="${helper} $(first_up "${i}")"
     fi
-    COUNTER=$[$COUNTER + 1]
+    COUNTER=$((COUNTER + 1))
   done
-  echo ${helper}
+  echo "${helper}"
 }
 
 pascalcase() {
   # Set pascal case with space separator
-  arg=$(detect ${@:-})
+  arg=( $(detect "${@:-}") )
   helper=""
   COUNTER=0
-  for i in ${arg[@]}; do
+  for i in "${arg[@]}"; do
     if [[ $COUNTER == 0 ]]; then
-      helper="$(first_up $i)"
+      helper=$(first_up "${i}")
     else
-      helper="${helper} $(first_up $i)"
+      helper="${helper} $(first_up "${i}")"
     fi
-    COUNTER=$[$COUNTER + 1]
+    COUNTER=$((COUNTER + 1))
   done
-  echo ${helper}
+  echo "${helper}"
 }
 
 screamingcase() {
   # Set screaming case and keep space separator
-  arg=$(detect ${@:-})
-  echo ${arg[*]} | tr '[:lower:]' '[:upper:]'
+  arg=( $(detect "${@:-}") )
+  echo "${arg[*]}" | tr '[:lower:]' '[:upper:]'
 }
 
 delete() {
   # Read from stdin and remove ' '
-  echo $(cat) | tr -d ' '
+  cat | tr -d ' '
 }
 
 replace() {
   # Read from stdin and replace ' ' with $1
-  echo $(cat) | tr -s ' ' ${1}
+  cat | tr -s ' ' "${1}"
 }
 
 #/   camel returns "camelSnakeKebab"
 camel() {
-  echo $(camelcase ${@:-} | delete)
+  camelcase "${@:-}" | delete
 }
 
 #/   pascal return "CamelSnakeKebab"
 pascal() {
-  echo $(pascalcase ${@:-} | delete)
+  pascalcase "${@:-}" | delete
 }
 
 #/   snake returns "camel_snake_kebab"
 snake() {
-  echo $(detect ${@:-} | replace '_')
+  detect "${@:-}" | replace '_'
 }
 
 #/   camelsnake returns "Camel_Snake_Kebab"
 camelsnake() {
-  echo $(pascalcase ${@:-} | replace '_')
+  pascalcase "${@:-}" | replace '_'
 }
 
 #/   screamingsnake returns "CAMEL_SNAKE_KEBAB"
 screamingsnake() {
-  echo $(screamingcase ${@:-} | replace '_')
+  screamingcase "${@:-}" | replace '_'
 }
 
 #/   kebab returns "camel-snake-kebab"
 kebab() {
-  echo $(detect ${@:-} | replace '-')
+  detect "${@:-}" | replace '-'
 }
 
 #/   camelkebab returns "Camel-Snake-Kebab"
 camelkebab() {
-  echo $(pascalcase ${@:-} | replace '-')
+  pascalcase "${@:-}" | replace '-'
 }
 
 #/   screamingkebab returns "CAMEL-SNAKE-KEBAB"
 screamingkebab() {
-  echo $(screamingcase ${@:-} | replace '-')
+  screamingcase "${@:-}" | replace '-'
 }
 
 #/   lower returns "camel snake kebab"
 lower() {
-  echo $(detect ${@:-})
+  detect "${@:-}"
 }
 
 #/   title returns "Camel Snake Kebab"
 title() {
-  echo $(pascalcase ${@:-})
+  pascalcase "${@:-}"
 }
 
 #/   screaming returns "CAMEL SNAKE KEBAB"
 screaming() {
-  echo $(screamingcase ${@:-})
+  screamingcase "${@:-}"
 }
 
 #/
@@ -185,50 +185,50 @@ screaming() {
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 
-  arg=${@:2}
-  if [[ -t 0 && -z ${arg} ]]; then
-    if [[ ${arg} == '' ]]; then
-      arg=' '
+  arg=( "${@:2}" )
+  if [[ -t 0 && -z ${arg[*]} ]]; then
+    if [[ ${arg[0]} == '' ]]; then
+      arg[0]=' '
     else
       usage
     fi 
   fi
   
-  arg=${arg:-$(cat -)}
+  arg=( ${arg:-$(cat -)} )
 
   case ${1:-} in
     camel)
-      camel ${arg}
+      camel "${arg[*]}"
     ;;
     pascal)
-      pascal ${arg}
+      pascal "${arg[*]}"
     ;;
     snake)
-      snake ${arg}
+      snake "${arg[*]}"
     ;;
     camelsnake)
-      camelsnake ${arg}
+      camelsnake "${arg[*]}"
     ;;
     screamingsnake)
-      screamingsnake ${arg}
+      screamingsnake "${arg[*]}"
     ;;
     kebab)
-      kebab ${arg}
+      kebab "${arg[*]}"
     ;;
     camelkebab)
-      camelkebab ${arg}
+      camelkebab "${arg[*]}"
     ;;
     screamingkebab)
-      screamingkebab ${arg}
+      screamingkebab "${arg[*]}"
     ;;
     lower)
-      lower ${arg}
+      lower "${arg[*]}"
     ;;
     title)
-      title ${arg}
+      title "${arg[*]}"
     ;;
     screaming)
-      screaming ${arg}
+      screaming "${arg[*]}"
     ;;
     *)
       usage
