@@ -4,7 +4,7 @@ set -euo pipefail
 
 #/
 #/ Usage: 
-#/ ./casbab.sh type [string]
+#/ ./casbab.sh option [string]
 #/ 
 #/ Description:
 #/ CLI "tool" and a bash "library" for converting representation style of compound words or phrases
