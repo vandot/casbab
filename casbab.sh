@@ -79,6 +79,10 @@ first_up() {
 camelcase() {
   # Set camel case with space separator
   arg=( $(detect "${@:-}") )
+  if [[ ${#arg[@]} -eq 0 ]]; then
+    echo ' '
+    exit 0
+  fi
   helper=""
   COUNTER=0
   for i in "${arg[@]}"; do
@@ -95,6 +99,10 @@ camelcase() {
 pascalcase() {
   # Set pascal case with space separator
   arg=( $(detect "${@:-}") )
+  if [[ ${#arg[@]} -eq 0 ]]; then
+    echo ' '
+    exit 0
+  fi
   helper=""
   COUNTER=0
   for i in "${arg[@]}"; do
@@ -111,6 +119,10 @@ pascalcase() {
 screamingcase() {
   # Set screaming case and keep space separator
   arg=( $(detect "${@:-}") )
+  if [[ ${#arg[@]} -eq 0 ]]; then
+    echo ' '
+    exit 0
+  fi
   echo "${arg[*]}" | tr '[:lower:]' '[:upper:]'
 }
 
@@ -198,37 +210,37 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 
   case ${1:-} in
     camel)
-      camel "${arg[*]}"
+      camel "${arg[*]:-""}"
     ;;
     pascal)
-      pascal "${arg[*]}"
+      pascal "${arg[*]:-""}"
     ;;
     snake)
-      snake "${arg[*]}"
+      snake "${arg[*]:-""}"
     ;;
     camelsnake)
-      camelsnake "${arg[*]}"
+      camelsnake "${arg[*]:-""}"
     ;;
     screamingsnake)
-      screamingsnake "${arg[*]}"
+      screamingsnake "${arg[*]:-""}"
     ;;
     kebab)
-      kebab "${arg[*]}"
+      kebab "${arg[*]:-""}"
     ;;
     camelkebab)
-      camelkebab "${arg[*]}"
+      camelkebab "${arg[*]:-""}"
     ;;
     screamingkebab)
-      screamingkebab "${arg[*]}"
+      screamingkebab "${arg[*]:-""}"
     ;;
     lower)
-      lower "${arg[*]}"
+      lower "${arg[*]:-""}"
     ;;
     title)
-      title "${arg[*]}"
+      title "${arg[*]:-""}"
     ;;
     screaming)
-      screaming "${arg[*]}"
+      screaming "${arg[*]:-""}"
     ;;
     *)
       usage
