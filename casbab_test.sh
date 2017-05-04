@@ -1,12 +1,13 @@
 # shellcheck disable=SC2148
-# shUnit2 doesn't allow IFS change from default, code is not automaticly tested for spaces
-
 # shellcheck disable=SC1091
+
 . ./casbab.sh
 
 TEST_STRING=( "camelSnakeKebab" "CamelSnakeKebab" "camel_snake_kebab" "Camel_Snake_Kebab" "CAMEL_SNAKE_KEBAB" "camel-snake-kebab" "Camel-Snake-Kebab" "CAMEL-SNAKE-KEBAB" "camel__snake_kebab" "camel___snake_kebab" "camel____snake_kebab" "camel--snake-kebab" "camel---snake-kebab" "camel----snake-kebab" )
 
 EMPTY_STRING=""
+
+SPACE_STRING=" caMel   Snake keBab"
 
 test_camel() {
   for string in "${TEST_STRING[@]}"; do
@@ -110,6 +111,24 @@ test_stdin() {
     expected="camelSnakeKebab"
     assertEquals "string: $string" "$expected" "$actual"
   done
+}
+
+test_camel_space() {
+  actual=$(camel "$SPACE_STRING")
+  expected="camelSnakeKebab"
+  assertEquals "$expected" "$actual"
+}
+
+test_arg_space() {
+  actual=$(./casbab.sh snake "$SPACE_STRING")
+  expected="camel_snake_kebab"
+  assertEquals "$expected" "$actual"
+}
+
+test_stdin_space() {
+  actual=$(echo "$SPACE_STRING" | ./casbab.sh pascal)
+  expected="CamelSnakeKebab"
+  assertEquals "$expected" "$actual"
 }
 
 test_camel_empty() {
