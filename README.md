@@ -10,7 +10,7 @@ Supports '_', '-' or ' ' as a delimiter and case change inside string. Mixed usa
 ## Installation
 
 ```sh
-Git clone, copy paste casbab.sh or use docker run --rm vandot/casbab :D
+Git clone, copy paste casbab.sh or docker pull vandot/casbab :D
 ```
 
 ## Example usage
