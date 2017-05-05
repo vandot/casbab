@@ -4,8 +4,8 @@ CLI "tool" and a bash "library" for converting representation style of compound 
 Inspired by and bash port of [casbab](https://github.com/janos/casbab).
 
 [![Build Status](https://travis-ci.org/vandot/casbab.svg?branch=master)](https://travis-ci.org/vandot/casbab)
-[![Docker Stars](https://img.shields.io/docker/stars/vandot/casbab.svg?style=flat-square)](https://hub.docker.com/r/vandot/casbab/)
-[![Docker Pulls](https://img.shields.io/docker/pulls/vandot/casbab.svg?style=flat-square)](https://hub.docker.com/r/vandot/casbab/)
+[![Docker Stars](https://img.shields.io/docker/stars/vandot/casbab.svg)](https://hub.docker.com/r/vandot/casbab/)
+[![Docker Pulls](https://img.shields.io/docker/pulls/vandot/casbab.svg)](https://hub.docker.com/r/vandot/casbab/)
 
 Supports '_', '-' or ' ' as a delimiter and case change inside string. Mixed usage of delimiters and case change is not supported. First delimiter that could be found is going to be used as a delimiter, case change is used only when there are no delimiters. Empty string input will return empty string.
 
