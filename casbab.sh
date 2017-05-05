@@ -198,8 +198,9 @@ screaming() {
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
 
   arg=( "${@:2}" )
+
   if [[ -t 0 && -z ${arg[*]} ]]; then
-    if [[ ${arg[0]} == '' ]]; then
+    if [[ ${#arg[*]} -eq 1 ]]; then
       arg[0]=' '
     else
       usage
