@@ -149,4 +149,12 @@ test_stdin_empty() {
   assertEquals "$expected" "$actual"
 }
 
+test_docker_camel() {
+  for string in "${TEST_STRING[@]}"; do
+    actual=$(docker run --rm vandot/casbab camel "$string")
+    expected="camelSnakeKebab"
+    assertEquals "string: $string" "$expected" "$actual"
+  done
+}
+
 . shunit2-2.1.6/src/shunit2

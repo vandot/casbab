@@ -18,7 +18,7 @@ set -euo pipefail
 #/ $ ./casbab.sh pascal Camel Snake Kebab
 #/ $ CamelSnakeKebab
 #/
-#/ You can source this file as use it's functions
+#/ You can source this file and use it's functions
 #/ camel camelSnakeKebab
 #/
 #/ Options:
@@ -60,7 +60,7 @@ dif_case() {
       helper="${arg:$i:1}"
     elif ([[ $(check_case "${arg:$i:1}") == 0 ]] && [[ $(check_case "${arg:((i+1)):1}") == 1 ]]) || ([[ $(check_case "${arg:$i:1}") == 0 ]] && [[ $(check_case "${arg:((i-1)):1}") == 1 ]]); then
       helper="${helper} ${arg:$i:1}"
-    elif [[ $(check_case "${arg:$i:1}") == $(check_case "${arg:((i-1)):1}") ]] || ([[ $(check_case "${arg:$i:1}") == 1 ]] && [[ $(check_case "${arg:((i-1)):1}") == 0 ]]);then
+    elif [[ $i == [^a-zA-Z] ]] || [[ $(check_case "${arg:$i:1}") == $(check_case "${arg:((i-1)):1}") ]] || ([[ $(check_case "${arg:$i:1}") == 1 ]] && [[ $(check_case "${arg:((i-1)):1}") == 0 ]]);then
       helper="${helper}${arg:$i:1}"
     else
       echo "Unknown character: ${arg:$i:1}"
