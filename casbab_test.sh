@@ -1,160 +1,94 @@
-# shellcheck disable=SC2148
-# shellcheck disable=SC1091
+#!/usr/bin/env bash
+# Run: SHUNIT2=/path/to/shunit2 bash casbab_test.sh
+# shellcheck disable=SC1090,SC1091,SC2317
 
 . ./casbab.sh
 
-TEST_STRING=( "camelSnakeKebab" "CamelSnakeKebab" "camel_snake_kebab" "Camel_Snake_Kebab" "CAMEL_SNAKE_KEBAB" "camel-snake-kebab" "Camel-Snake-Kebab" "CAMEL-SNAKE-KEBAB" "camel__snake_kebab" "camel___snake_kebab" "camel____snake_kebab" "camel--snake-kebab" "camel---snake-kebab" "camel----snake-kebab" )
+TEST_STRING=( "camelSnakeKebab" "CamelSnakeKebab" "camel_snake_kebab" "Camel_Snake_Kebab" "CAMEL_SNAKE_KEBAB" "camel-snake-kebab" "Camel-Snake-Kebab" "CAMEL-SNAKE-KEBAB" "camel__snake_kebab" "camel___snake_kebab" "camel____snake_kebab" "camel--snake-kebab" "camel---snake-kebab" "camel----snake-kebab" "camel_snake-kebab" "camel-_ snake kebab" "camelSNAKEKebab" "_camel_snake_kebab_" )
 
 EMPTY_STRING=""
 
 SPACE_STRING=" caMel   Snake keBab"
 
-test_camel() {
+# assert_style <style> <expected>: every TEST_STRING converts to <expected>
+assert_style() {
+  local string
   for string in "${TEST_STRING[@]}"; do
-    actual=$(camel "$string")
-    expected="camelSnakeKebab"
-    assertEquals "string: $string" "$expected" "$actual"
+    assertEquals "$1: $string" "$2" "$("casbab_$1" "$string")"
   done
 }
 
-test_pascal() {
-  for string in "${TEST_STRING[@]}"; do
-    actual=$(pascal "$string")
-    expected="CamelSnakeKebab"
-    assertEquals "string: $string" "$expected" "$actual"
-  done
+test_camel()          { assert_style camel          "camelSnakeKebab"; }
+test_pascal()         { assert_style pascal         "CamelSnakeKebab"; }
+test_snake()          { assert_style snake          "camel_snake_kebab"; }
+test_camelsnake()     { assert_style camelsnake     "Camel_Snake_Kebab"; }
+test_screamingsnake() { assert_style screamingsnake "CAMEL_SNAKE_KEBAB"; }
+test_kebab()          { assert_style kebab          "camel-snake-kebab"; }
+test_camelkebab()     { assert_style camelkebab     "Camel-Snake-Kebab"; }
+test_screamingkebab() { assert_style screamingkebab "CAMEL-SNAKE-KEBAB"; }
+test_lower()          { assert_style lower          "camel snake kebab"; }
+test_title()          { assert_style title          "Camel Snake Kebab"; }
+test_screaming()      { assert_style screaming      "CAMEL SNAKE KEBAB"; }
+
+test_acronyms_and_digits() {
+  assertEquals "http_server"     "$(casbab_snake HTTPServer)"
+  assertEquals "parse_json2_yaml" "$(casbab_snake parseJSON2Yaml)"
+  assertEquals "user_id_v2"      "$(casbab_snake user_id-v2)"
+  assertEquals "a"               "$(casbab_snake a)"
+  assertEquals "A"               "$(casbab_pascal a)"
 }
 
-test_snake() {
-  for string in "${TEST_STRING[@]}"; do
-    actual=$(snake "$string")
-    expected="camel_snake_kebab"
-    assertEquals "string: $string" "$expected" "$actual"
-  done
+test_no_glob_expansion() {
+  local dir
+  dir=$(mktemp -d)
+  touch "$dir/camelXsnake"
+  assertEquals "camel*snake" "$(cd "$dir" && casbab_snake 'camel*snake')"
+  rm -rf "$dir"
 }
 
-test_camelsnake() {
-  for string in "${TEST_STRING[@]}"; do
-    actual=$(camelsnake "$string")
-    expected="Camel_Snake_Kebab"
-    assertEquals "string: $string" "$expected" "$actual"
-  done
-}
-
-test_screamingsnake() {
-  for string in "${TEST_STRING[@]}"; do
-    actual=$(screamingsnake "$string")
-    expected="CAMEL_SNAKE_KEBAB"
-    assertEquals "string: $string" "$expected" "$actual"
-  done
-}
-
-test_kebab() {
-  for string in "${TEST_STRING[@]}"; do
-    actual=$(kebab "$string")
-    expected="camel-snake-kebab"
-    assertEquals "string: $string" "$expected" "$actual"
-  done
-}
-
-test_camelkebab() {
-  for string in "${TEST_STRING[@]}"; do
-    actual=$(camelkebab "$string")
-    expected="Camel-Snake-Kebab"
-    assertEquals "string: $string" "$expected" "$actual"
-  done
-}
-
-test_screamingkebab() {
-  for string in "${TEST_STRING[@]}"; do
-    actual=$(screamingkebab "$string")
-    expected="CAMEL-SNAKE-KEBAB"
-    assertEquals "string: $string" "$expected" "$actual"
-  done
-}
-
-test_lower() {
-  for string in "${TEST_STRING[@]}"; do
-    actual=$(lower "$string")
-    expected="camel snake kebab"
-    assertEquals "string: $string" "$expected" "$actual"
-  done
-}
-
-test_title() {
-  for string in "${TEST_STRING[@]}"; do
-    actual=$(title "$string")
-    expected="Camel Snake Kebab"
-    assertEquals "string: $string" "$expected" "$actual"
-  done
-}
-
-test_screaming() {
-  for string in "${TEST_STRING[@]}"; do
-    actual=$(screaming "$string")
-    expected="CAMEL SNAKE KEBAB"
-    assertEquals "string: $string" "$expected" "$actual"
-  done
+test_sourcing_is_safe() {
+  # Sourcing must not change the caller's shell options or exit it.
+  assertEquals "still alive" "$(bash -c 'set +eu; . ./casbab.sh; casbab_camel "" >/dev/null; [[ $- != *e* && $- != *u* ]] && echo "still alive"')"
 }
 
 test_arg() {
+  local string
   for string in "${TEST_STRING[@]}"; do
-    actual=$(./casbab.sh snake "$string")
-    expected="camel_snake_kebab"
-    assertEquals "string: $string" "$expected" "$actual"
+    assertEquals "string: $string" "camel_snake_kebab" "$(./casbab.sh snake "$string")"
   done
+}
+
+test_multiple_args() {
+  assertEquals "CamelSnakeKebab" "$(./casbab.sh pascal Camel Snake Kebab)"
 }
 
 test_stdin() {
+  local string
   for string in "${TEST_STRING[@]}"; do
-    actual=$(echo "$string" | ./casbab.sh camel)
-    expected="camelSnakeKebab"
-    assertEquals "string: $string" "$expected" "$actual"
+    assertEquals "string: $string" "camelSnakeKebab" "$(echo "$string" | ./casbab.sh camel)"
   done
 }
 
-test_camel_space() {
-  actual=$(camel "$SPACE_STRING")
-  expected="camelSnakeKebab"
-  assertEquals "$expected" "$actual"
+test_stdin_multiline() {
+  assertEquals "$(printf 'foo_bar\nbaz_qux')" "$(printf 'fooBar\nBazQux\n' | ./casbab.sh snake)"
 }
 
-test_arg_space() {
-  actual=$(./casbab.sh snake "$SPACE_STRING")
-  expected="camel_snake_kebab"
-  assertEquals "$expected" "$actual"
+test_camel_space() { assertEquals "camelSnakeKebab"   "$(casbab_camel "$SPACE_STRING")"; }
+test_arg_space()   { assertEquals "camel_snake_kebab" "$(./casbab.sh snake "$SPACE_STRING")"; }
+test_stdin_space() { assertEquals "CamelSnakeKebab"   "$(echo "$SPACE_STRING" | ./casbab.sh pascal)"; }
+
+test_camel_empty() { assertEquals "" "$(casbab_camel "$EMPTY_STRING")"; }
+test_arg_empty()   { assertEquals "" "$(./casbab.sh snake "$EMPTY_STRING")"; }
+test_stdin_empty() { assertEquals "" "$(echo "$EMPTY_STRING" | ./casbab.sh pascal)"; }
+
+test_help() {
+  ./casbab.sh --help | grep -q '^Usage:'
+  assertTrue "--help prints usage and exits 0" $?
 }
 
-test_stdin_space() {
-  actual=$(echo "$SPACE_STRING" | ./casbab.sh pascal)
-  expected="CamelSnakeKebab"
-  assertEquals "$expected" "$actual"
+test_unknown_style() {
+  ./casbab.sh nope foo >/dev/null 2>&1
+  assertEquals "unknown style exits 2" 2 $?
 }
 
-test_camel_empty() {
-  actual=$(camel "$EMPTY_STRING")
-  expected=""
-  assertEquals "$expected" "$actual"
-}
-
-test_arg_empty() {
-  actual=$(./casbab.sh snake "$EMPTY_STRING")
-  expected=""
-  assertEquals "$expected" "$actual"
-}
-
-test_stdin_empty() {
-  actual=$(echo "$EMPTY_STRING" | ./casbab.sh pascal)
-  expected=""
-  assertEquals "$expected" "$actual"
-}
-
-test_docker_camel() {
-  for string in "${TEST_STRING[@]}"; do
-    actual=$(docker run --rm vandot/casbab camel "$string")
-    expected="camelSnakeKebab"
-    assertEquals "string: $string" "$expected" "$actual"
-  done
-}
-
-. shunit2-2.1.6/src/shunit2
+. "${SHUNIT2:-./shunit2}"
