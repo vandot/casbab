@@ -1,58 +1,94 @@
 # Camel Snake Kebab
 
-CLI "tool" and a bash "library" for converting representation style of compound words or phrases.
-Inspired by and bash port of [casbab](https://github.com/janos/casbab).
+CLI tool and bash library for converting the representation style of compound words or phrases.
+Inspired by and a bash port of [casbab](https://github.com/janos/casbab).
 
-[![Build Status](https://travis-ci.org/vandot/casbab.svg?branch=master)](https://travis-ci.org/vandot/casbab)
-[![Docker Stars](https://img.shields.io/docker/stars/vandot/casbab.svg)](https://hub.docker.com/r/vandot/casbab/)
+[![CI](https://github.com/vandot/casbab/actions/workflows/ci.yml/badge.svg)](https://github.com/vandot/casbab/actions/workflows/ci.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/vandot/casbab.svg)](https://hub.docker.com/r/vandot/casbab/)
 
-Supports '_', '-' or ' ' as a delimiter and case change inside string. Mixed usage of delimiters and case change is not supported. First delimiter that could be found is going to be used as a delimiter, case change is used only when there are no delimiters. Empty string input will return empty string.
+Works with bash 3.2+ (including the stock macOS bash) and only needs `sed`, `awk` and `tr`.
+
+## Word splitting
+
+- If the input contains any of `_`, `-` or whitespace, those are the word boundaries, in any mix and any run length (`camel-_ snake kebab` is three words).
+- Otherwise words are split on case changes, keeping acronyms together (`HTTPServer` → `http server`, `parseJSON2Yaml` → `parse json2 yaml`).
+- Empty input returns empty output.
 
 ## Installation
 
 ```sh
-Git clone, copy paste casbab.sh or docker pull vandot/casbab :D
+curl -fsSLo ~/.local/bin/casbab https://raw.githubusercontent.com/vandot/casbab/master/casbab.sh
+chmod +x ~/.local/bin/casbab
 ```
 
-## Example usage
+Or `git clone`, or `docker pull vandot/casbab`.
 
-You can use casbab as a library and source it inside your script, send string as a argument or read it from stdin.
+## CLI usage
 
-```sh
-$ ./casbab.sh pascal Camel Snake Kebab
-$ CamelSnakeKebab
+Pass words as arguments, or pipe them in. Stdin is converted line by line.
 
-$ echo camel-Snake-Kebab | ./casbab.sh camel
-$ camelSnakeKebab
+```console
+$ casbab pascal Camel Snake Kebab
+CamelSnakeKebab
 
-$ ./casbab.sh snake CamelSnakeKebab
-$ camel_snake_kebab
+$ echo camel-Snake-Kebab | casbab camel
+camelSnakeKebab
 
-$ echo Camel-Snake-keBaB | ./casbab.sh camelsnake
-$ Camel_Snake_Kebab
+$ casbab snake HTTPServerError
+http_server_error
 
-$ ./casbab.sh screamingsnake camel____snake_kebab 
-$ CAMEL_SNAKE_KEBAB
+$ echo Camel-Snake-keBaB | casbab camelsnake
+Camel_Snake_Kebab
 
-$ echo camelSNAKEKebab | ./casbab.sh kebab
-$ camel-snake-kebab
-  
-$ ./casbab.sh camelkebab camel---snake-kebab
-$ Camel-Snake-Kebab
-  
-$ echo "camel--SNAKE---Kebab" | ./casbab.sh screamingkebab 
-$ CAMEL-SNAKE-KEBAB
-  
-$ ./casbab.sh lower CAmEL-SNaKE-KEbAB
-$ camel snake kebab
+$ casbab screamingsnake camel____snake-kebab
+CAMEL_SNAKE_KEBAB
 
-$ echo camel_snake_kebab | ./casbab.sh title
-$ Camel Snake Kebab
+$ echo camelSNAKEKebab | casbab kebab
+camel-snake-kebab
 
-$ ./casbab.sh screaming camel_Snake____kebab
-$ CAMEL SNAKE KEBAB
+$ casbab camelkebab camel---snake-kebab
+Camel-Snake-Kebab
+
+$ printf 'fooBar\nBazQux\n' | casbab screamingkebab
+FOO-BAR
+BAZ-QUX
+
+$ casbab lower CAmEL-SNaKE-KEbAB
+camel snake kebab
+
+$ echo camel_snake_kebab | casbab title
+Camel Snake Kebab
+
+$ casbab screaming camel_Snake____kebab
+CAMEL SNAKE KEBAB
 
 $ docker run --rm vandot/casbab pascal CamelSNAKEKebab
-$ CamelSnakeKebab
+CamelSnakeKebab
+```
+
+`casbab --help` lists all styles. Unknown styles or missing input exit with status 2.
+
+## Library usage
+
+Sourcing is side-effect free: it doesn't change your shell options or exit your script.
+Every style is available as a `casbab_<style>` function, taking arguments or stdin.
+
+```bash
+source casbab.sh
+
+casbab_snake "camelSnakeKebab"     # camel_snake_kebab
+var=$(casbab_pascal "my-var-name") # MyVarName
+ls | casbab_kebab                  # one converted line per file name
+```
+
+> **Upgrading from the old version:** library functions used to be unprefixed
+> (`camel`, `snake`, `lower`, ...). They are now `casbab_camel`, `casbab_snake`, etc.
+> to avoid clobbering commands and functions in the sourcing shell. CLI usage is unchanged.
+
+## Tests
+
+```sh
+git clone --depth 1 --branch v2.1.8 https://github.com/kward/shunit2
+bash casbab_test.sh
+shellcheck casbab.sh casbab_test.sh
 ```
