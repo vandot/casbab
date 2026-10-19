@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        # macOS covers bash 3.2 + BSD sed/awk, Ubuntu covers bash 5 + GNU tools
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch shunit2
+        run: git clone --depth 1 --branch v2.1.8 https://github.com/kward/shunit2 "$RUNNER_TEMP/shunit2"
+      - name: Test
+        run: SHUNIT2="$RUNNER_TEMP/shunit2/shunit2" bash casbab_test.sh
+
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: shellcheck casbab.sh casbab_test.sh
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: docker build -t casbab .
+      - name: Smoke test
+        run: |
+          test "$(docker run --rm casbab pascal camel_snake-kebab)" = "CamelSnakeKebab"
+          test "$(echo fooBar | docker run --rm -i casbab screamingkebab)" = "FOO-BAR"

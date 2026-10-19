@@ -1,7 +1,9 @@
-FROM vandot/alpine-bash
+FROM bash:5
 
-LABEL maintainer "ivan@vandot.rs"
+LABEL org.opencontainers.image.source="https://github.com/vandot/casbab" \
+      org.opencontainers.image.description="Convert between camelCase, snake_case, kebab-case and friends" \
+      org.opencontainers.image.licenses="BSD-3-Clause"
 
-ADD casbab.sh /
+COPY casbab.sh /usr/local/bin/casbab
 
-ENTRYPOINT ["bash", "/casbab.sh"]
+ENTRYPOINT ["bash", "/usr/local/bin/casbab"]
